@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MISSION DURABILITÉ</title>
+
+  <style>
+    :root{
+      --orange:#ff7a00;
+      --orange2:#ffb000;
+      --text:#ffffff;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    html, body { height:100%; margin:0; }
+    body{
+      background:#000;
+      color:var(--text);
+      font-family:var(--sans);
+      overflow:hidden;
+      user-select:none;
+      -webkit-tap-highlight-color:transparent;
+      touch-action:manipulation;
+    }
+
+    /* ===== BACKGROUND (CIMAF / industrial / data) ===== */
+    .bg{
+      position:fixed;
+      inset:0;
+      background:
+        radial-gradient(circle at 20% 25%, rgba(60,160,255,.20), transparent 55%),
+        radial-gradient(circle at 80% 35%, rgba(255,122,0,.18), transparent 55%),
+        radial-gradient(circle at 55% 85%, rgba(0,255,200,.10), transparent 60%),
+        linear-gradient(180deg, rgba(10,14,18,.95), rgba(0,0,0,.92));
+      z-index:0;
+    }
+
+    /* subtle grid + "industrial lights" feel */
+    .bg::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+      background-size: 64px 64px;
+      opacity:.14;
+      mix-blend-mode:overlay;
+    }
+    .bg::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.08), transparent 55%),
+        radial-gradient(ellipse at 50% 110%, rgba(0,0,0,.65), transparent 55%);
+      opacity:.75;
+    }
+
+    .dim{
+      position:fixed;
+      inset:0;
+      background:radial-gradient(circle at 50% 40%, rgba(0,0,0,.25), rgba(0,0,0,.80));
+      z-index:1;
+    }
+
+    /* ===== MATRIX ===== */
+    canvas#matrix{
+      position:fixed;
+      inset:0;
+      z-index:2;
+      pointer-events:none;
+      mix-blend-mode:screen;
+      opacity:.92;
+    }
+
+    /* ===== CENTRAL TEXT ===== */
+    .center-hero{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:4;
+      pointer-events:none;
+      text-align:center;
+      padding: 0 14px;
+    }
+    .hero-card{
+      padding:26px 32px;
+      border-radius:22px;
+      background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,122,0,.30);
+      box-shadow:0 18px 55px rgba(0,0,0,.65);
+      max-width:min(92vw, 820px);
+    }
+    .hero-text{
+      font-weight:900;
+      font-size:clamp(26px, 6vw, 56px);
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      margin:0;
+      text-shadow:
+        0 0 18px rgba(255,122,0,.25),
+        0 0 32px rgba(255,122,0,.18);
+      animation:pulse 1.9s ease-in-out infinite;
+      transform-origin:center;
+    }
+    @keyframes pulse{
+      0%,100%{ transform:scale(1); filter:drop-shadow(0 0 0 rgba(255,122,0,0)); }
+      50%{ transform:scale(1.03); filter:drop-shadow(0 0 14px rgba(255,122,0,.35)); }
+    }
+
+    .hero-sub{
+      margin:14px 0 0;
+      font-size:clamp(13px, 2.7vw, 18px);
+      letter-spacing:.04em;
+      opacity:.95;
+      line-height:1.35;
+    }
+
+    /* ===== TITLE ===== */
+    .title{
+      position:fixed;
+      top:5vh;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:5;
+      text-align:center;
+      padding:14px 20px;
+      border-radius:18px;
+      background:rgba(0,0,0,.48);
+      border:1px solid rgba(255,122,0,.25);
+      box-shadow:0 10px 30px rgba(0,0,0,.45);
+      max-width:min(92vw, 860px);
+    }
+    .title h1{
+      margin:0;
+      font-size:clamp(28px, 5vw, 60px);
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      text-shadow:0 0 18px rgba(255,122,0,.20);
+    }
+    .subtitle{
+      margin-top:8px;
+      font-weight:900;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-size:clamp(14px, 2.6vw, 20px);
+      opacity:.98;
+    }
+
+    /* ===== HUD ===== */
+    .hud{
+      position:fixed;
+      bottom:4vh;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:5;
+      width:min(92vw, 900px);
+      background:rgba(0,0,0,.68);
+      border-radius:18px;
+      border:1px solid rgba(255,122,0,.25);
+      padding:16px;
+      text-align:center;
+      box-shadow:0 12px 35px rgba(0,0,0,.55);
+      display:grid;
+      gap:12px;
+      justify-items:center;
+    }
+    .label{
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      opacity:.85;
+    }
+
+    /* ESCAPE GAME in orange */
+    .code{
+      font-family:var(--mono);
+      font-size:clamp(18px, 4vw, 26px);
+      font-weight:900;
+      letter-spacing:.18em;
+      color:var(--orange);
+      text-shadow:0 0 14px rgba(255,122,0,.28);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .inputRow{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      width:100%;
+      flex-wrap:wrap;
+    }
+    .codeInput{
+      width:min(520px, 92%);
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,122,0,.35);
+      background:rgba(0,0,0,.55);
+      color:#fff;
+      font-family:var(--mono);
+      font-size:16px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      outline:none;
+    }
+    .codeInput::placeholder{
+      color:rgba(255,255,255,.55);
+      letter-spacing:.08em;
+      text-transform:none;
+    }
+    .btn{
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,122,0,.40);
+      background:rgba(255,122,0,.14);
+      color:#fff;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      cursor:pointer;
+    }
+    .btn:active{ transform:scale(.98); }
+
+    /* ===== MOTIFS ===== */
+    .motifs{ position:fixed; inset:0; z-index:3; }
+    .motif{
+      position:absolute;
+      top:-10vh;
+      width:clamp(30px, 6vw, 40px);
+      height:clamp(30px, 6vw, 40px);
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-family:var(--mono);
+      font-weight:900;
+      color:#fff;
+      cursor:pointer;
+      background:radial-gradient(circle at 35% 30%, rgba(255,176,0,.95), rgba(255,122,0,.35) 55%, transparent 70%);
+      box-shadow:0 0 18px rgba(255,122,0,.5);
+      backdrop-filter:blur(2px);
+    }
+
+    /* ===== FINAL FULLSCREEN MESSAGE ===== */
+    .final{
+      position:fixed;
+      inset:0;
+      z-index:999;
+      background:#000;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding: 18px;
+    }
+    .final.show{ display:flex; }
+    .final .msg{
+      font-weight:900;
+      font-size:clamp(22px, 5.2vw, 56px);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#ffffff;
+      text-shadow:0 0 18px rgba(255,122,0,.18);
+      max-width:min(92vw, 1100px);
+    }
+
+    @media(max-width:480px){
+      .hero-card{ padding:20px 22px; }
+      .hud{ bottom:3vh; }
+      .code{ letter-spacing:.14em; }
+      .codeInput{ font-size:15px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- MUSIQUE D’AMBIANCE -->
+  <audio id="bgMusic" loop>
+    <source src="music.mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="bg" aria-hidden="true"></div>
+  <div class="dim" aria-hidden="true"></div>
+
+  <canvas id="matrix" aria-hidden="true"></canvas>
+  <div class="motifs" id="motifs"></div>
+
+  <!-- TEXTE CENTRAL -->
+  <div class="center-hero" aria-hidden="true">
+    <div class="hero-card">
+      <div class="hero-text"><strong>ENJEUX COMMUNICATIONNELS</strong></div>
+      <div class="hero-sub">Appuyer sur les symboles tombants pour faire apparaître le code.</div>
+    </div>
+  </div>
+
+  <!-- TITRE -->
+  <div class="title">
+    <h1>MISSION DURABILITÉ</h1>
+    <div class="subtitle"><strong>TODAY IS THE DAY</strong></div>
+  </div>
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="label">Code progressif</div>
+    <div class="code" id="progress">_ _ _ _ _   _ _ _ _</div>
+
+    <!-- saisie du code -->
+    <div class="inputRow">
+      <input class="codeInput" id="codeInput" autocomplete="off" inputmode="latin" spellcheck="false"
+             placeholder="Saisir le code ici (ex: ESCAPE GAME)" />
+      <button class="btn" id="validateBtn" type="button">Valider</button>
+    </div>
+  </div>
+
+  <!-- FINAL SCREEN -->
+  <div class="final" id="finalScreen" aria-live="assertive">
+    <div class="msg">SOYEZ PRÊTS À VIVRE UNE EXPÉRIENCE HORS DU COMMUN</div>
+  </div>
+
+  <script>
+    /* ===== Start music on first interaction (mobile-safe) ===== */
+    const music = document.getElementById("bgMusic");
+    document.addEventListener("pointerdown", () => {
+      if(music.paused) music.play().catch(()=>{});
+    }, { once:true });
+
+    /* ===== Click beep ===== */
+    let audioCtx;
+    function clickBeep(){
+      try{
+        if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+
+        o.type = "square";
+        o.frequency.setValueAtTime(900, now);
+
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.10, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(now);
+        o.stop(now + 0.09);
+      }catch(e){}
+    }
+
+    /* ===== Matrix ===== */
+    const canvas = document.getElementById("matrix");
+    const ctx = canvas.getContext("2d", { alpha:true });
+
+    const chars = "アイウエオカキクケコサシスセソ0123456789Δ◆◇■▲▼";
+    const fontSize = 18;
+    let drops = [];
+    let cols = 0;
+
+    function resize(){
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      cols = Math.floor(window.innerWidth / fontSize);
+      drops = Array(cols).fill(0).map(()=>Math.random()*window.innerHeight/fontSize);
+    }
+    window.addEventListener("resize", resize, { passive:true });
+    resize();
+
+    function draw(){
+      ctx.fillStyle = "rgba(0,0,0,.12)";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      ctx.font = `900 ${fontSize}px ${getComputedStyle(document.body).fontFamily}`;
+      for(let i=0;i<drops.length;i++){
+        const t = chars[Math.floor(Math.random()*chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+
+        const a = 0.22 + Math.random()*0.45;
+        ctx.fillStyle = `rgba(255,122,0,${a})`;
+        ctx.fillText(t, x, y);
+
+        if(y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i] += 0.6 + Math.random()*0.3;
+      }
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+
+    /* ===== ESCAPE GAME progressive reveal ===== */
+    const target = "ESCAPE GAME";
+    let index = 0;
+    const progress = document.getElementById("progress");
+
+    function update(){
+      let out = "";
+      for(let i=0;i<target.length;i++){
+        const ch = target[i];
+        if(ch === " "){
+          out += "   ";
+        }else{
+          out += (i < index ? ch : "_") + " ";
+        }
+      }
+      progress.textContent = out.trimEnd();
+    }
+    update();
+
+    /* ===== Motifs falling & click ===== */
+    const motifsLayer = document.getElementById("motifs");
+    const MAX_MOTIFS = 18;
+
+    function spawnMotif(){
+      if(document.querySelectorAll(".motif").length >= MAX_MOTIFS) return;
+
+      const m = document.createElement("div");
+      m.className = "motif";
+      m.textContent = chars[Math.floor(Math.random()*chars.length)];
+      m.style.left = Math.random() * (window.innerWidth - 44) + "px";
+
+      const duration = 3800 + Math.random()*3200;
+      const drift = (Math.random() - 0.5) * 90;
+
+      const anim = m.animate(
+        [
+          { transform: "translate3d(0,0,0)", opacity: 0.0 },
+          { transform: `translate3d(${drift*0.2}px,10vh,0)`, opacity: 1.0, offset: 0.15 },
+          { transform: `translate3d(${drift}px,115vh,0)`, opacity: 0.75 }
+        ],
+        { duration, easing: "linear", iterations: 1 }
+      );
+      anim.onfinish = () => m.remove();
+
+      m.addEventListener("pointerdown", (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+
+        clickBeep();
+
+        if(index < target.length){
+          while(target[index] === " ") index++;
+          index++;
+          while(target[index] === " ") index++;
+          update();
+        }
+
+        if(index >= target.length){
+          progress.textContent = target.split("").map(ch => ch === " " ? "   " : ch + " ").join("").trimEnd();
+        }
+
+        anim.cancel();
+        m.remove();
+      }, { passive:false });
+
+      motifsLayer.appendChild(m);
+    }
+
+    setInterval(spawnMotif, 420);
+    for(let i=0;i<8;i++) setTimeout(spawnMotif, i*120);
+
+    /* ===== Validation -> Final fullscreen screen ===== */
+    const input = document.getElementById("codeInput");
+    const btn = document.getElementById("validateBtn");
+    const finalScreen = document.getElementById("finalScreen");
+
+    function normalize(s){
+      return (s || "")
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, " "); // normalize multiple spaces
+    }
+
+    function triggerFinal(){
+      finalScreen.classList.add("show");
+    }
+
+    function validate(){
+      const typed = normalize(input.value);
+      const expected = normalize(target);
+
+      if(typed === expected){
+        triggerFinal();
+      }else{
+        // small feedback without blocking
+        input.value = "";
+        input.placeholder = "Code incorrect. Réessayez : ESCAPE GAME";
+        setTimeout(()=> input.placeholder = "Saisir le code ici (ex: ESCAPE GAME)", 1600);
+      }
+    }
+
+    btn.addEventListener("click", validate);
+    input.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") validate();
+    });
+  </script>
+</body>
+</html>
